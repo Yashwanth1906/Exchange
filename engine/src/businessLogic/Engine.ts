@@ -1,5 +1,5 @@
 import { RedisManager } from "../RedisManager";
-import { CANCEL_ORDER, CREATE_ORDER, DEPTH, GET_DEPTH, GET_OPEN_ORDERS, MessageFromApi, ON_RAMP, OPEN_ORDERS, ORDER_CANCELLED, ORDER_PLACED, TRADE_ADDED } from "../types/types";
+import { CANCEL_ORDER, CREATE_ORDER, DEPTH, GET_DEPTH, GET_OPEN_ORDERS, MessageFromApi, ON_RAMP, OPEN_ORDERS, ORDER_CANCELLED, ORDER_PLACED, ORDER_UPDATE, TRADE_ADDED } from "../types/types";
 import { Fill, Order, OrderBook } from "./OrderBook";
 import fs from "fs"
 
@@ -172,7 +172,7 @@ export class Engine{
                     }
                     RedisManager.getInstance().sendToAPI(clientId,{
                         type:DEPTH,
-                        payLoad: orderbook.getDepth();
+                        payLoad: orderbook.getDepth()
                     })
                 } catch(e){
                     console.log(e)
@@ -187,6 +187,40 @@ export class Engine{
                 break;
         }
     }
+
+    sendUpdatedDepthAt(price: string,market: string){
+        const orderbook = this.orderbooks.find(o => o.ticker() === market);
+        if(!orderbook){
+            throw new Error("the orderBook is not found for the market");
+        }
+        const depth = orderbook.getDepth();
+        const updateBids = depth.bids.filter(o => o[0] === price);
+        const updateAsks = depth.asks.filter(o => o[0] === price);
+        RedisManager.getInstance().publicMessage(`depth@${market}`,{
+            stream : `depth@${market}`,
+            data:{
+                a : updateAsks.length ? updateAsks : [[price,"0"]],
+                b : updateBids.length ? updateBids : [[price,"0"]],
+                e : "Depth"
+            }
+        })
+    }
+
+    onRamp(userId: string,amount : string){
+        const userBalance = this.balances.get(userId);
+        if(!userBalance){
+            this.balances.set(userId,{
+                [BASE_CURRENCY]:{
+                    available:Number(amount),
+                    locked: 0
+                }
+            })
+        } else {
+            userBalance[BASE_CURRENCY].available+= Number(amount);
+        }
+    }
+
+
     createOrder(market: string,price: string, quantity: string, side: "buy"|"sell" , userId: string){
         const orderbook = this.orderbooks.find(o => o.ticker() === market);
         const baseAsset = market.split("_")[0];
@@ -225,6 +259,29 @@ export class Engine{
                 }
             })
         })
+    }
+
+    updateDbOrders(order: Order,executedQty: number,fills: Fill[],market: string){
+        RedisManager.getInstance().pushMessage({
+            type: ORDER_UPDATE,
+            data:{
+                orderId: order.orderId,
+                executedQty: executedQty,
+                market: market,
+                price: order.price.toString(),
+                quantity: order.quantity.toString(),
+                side: order.side
+            }
+        })
+        fills.forEach(fill => {
+            RedisManager.getInstance().pushMessage({
+                type: ORDER_UPDATE,
+                data: {
+                    orderId: fill.makerOrderId,
+                    executedQty: fill.quatity
+                }
+            });
+        });
     }
     publishWSDepthUpdates(fills: Fill[],price: string,side: "buy"| "sell", market: string){
         const orderbook = this.orderbooks.find(o => o.ticker() === market);

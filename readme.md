@@ -14,3 +14,11 @@
 
 
   step4: to build the application , npx tsc
+
+
+  To create a react project using vite.
+
+
+  Step1: npm create vite@latest , select framework:react, select variant : typescript.
+  Step2: npm install
+  
