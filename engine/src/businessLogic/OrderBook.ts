@@ -1,4 +1,6 @@
+import { reverse } from "dns";
 import { BASE_CURRENCY } from "./Engine";
+import { stringify } from "querystring";
 
 
 export interface Fill{
@@ -27,6 +29,7 @@ export class OrderBook{
     currentPrice : number;
 
     constructor(baseAsset: string, bids: Order[], asks: Order[], lastTradeId: number, currentPrice: number){
+        console.log("BASE_ASSEST : ",baseAsset)
         this.bids = bids;
         this.asks = asks;
         this.baseAsset = baseAsset;
@@ -50,8 +53,9 @@ export class OrderBook{
     addOrder(order: Order): {executedQty : number, fills: Fill[]}{
         if(order.side === "buy"){
             const {executedQty,fills} = this.matchBid(order);
+            order.quantity -= executedQty;
             order.filled = executedQty;
-            if(executedQty == order.quantity){
+            if(order.quantity == 0){
                 return {
                     executedQty,fills
                 }
@@ -62,8 +66,9 @@ export class OrderBook{
             }
         } else {
             const {executedQty,fills} = this.matchAsk(order);
+            order.quantity -= executedQty;
             order.filled =executedQty;
-            if(executedQty == order.quantity){
+            if(order.quantity == 0){
                 return { executedQty,fills}
             }
             this.asks.push(order);
@@ -74,11 +79,11 @@ export class OrderBook{
         const fills: Fill[] = [];
         let exec = 0;
         this.asks.sort();
-        console.log(this.asks);
         for(let i=0;i < this.asks.length ; i++){
             if (this.asks[i].price <= order.price && exec < order.quantity){
                 const filledQty = Math.min(this.asks[i].quantity,(order.quantity - exec));
                 exec+=filledQty;
+                this.asks[i].quantity-=filledQty;
                 this.asks[i].filled+=filledQty;
                 fills.push({
                     price: this.asks[i].price.toString(),
@@ -90,13 +95,14 @@ export class OrderBook{
             }
         }
         for(let i=0;i < this.asks.length ; i++){
-            if(this.asks[i].filled === this.asks[i].quantity){
+            if(this.asks[i].quantity === 0){
                 this.asks.splice(i,1);
                 i--;
             }
         }
         return {
-            fills,executedQty : exec
+            fills,
+            executedQty : exec
         }
     }
 
@@ -107,6 +113,7 @@ export class OrderBook{
             if (this.bids[i].price >= order.price && executedQty < order.quantity) {
                 const amountRemaining = Math.min(order.quantity - executedQty, this.bids[i].quantity);
                 executedQty += amountRemaining;
+                this.bids[i].quantity-=amountRemaining;
                 this.bids[i].filled += amountRemaining;
                 fills.push({
                     price: this.bids[i].price.toString(),
@@ -118,7 +125,7 @@ export class OrderBook{
             }
         }
         for (let i = 0; i < this.bids.length; i++) {
-            if (this.bids[i].filled === this.bids[i].quantity) {
+            if (this.bids[i].quantity === 0) {
                 this.bids.splice(i, 1);
                 i--;
             }
@@ -131,11 +138,10 @@ export class OrderBook{
 
 
     getDepth(){
-        const bids : [string,string][] = [];
-        const asks : [string,string][] = [];
+        const bids : [string,string,string][] = [];
+        const asks : [string,string,string][] = [];
         const bidObj : {[key: string] : number} = {};
         const askObj : {[key: string] : number} = {};
-
         for(let i = 0; i < this.bids.length ; i++){
             const order = this.bids[i];
             if(!bidObj[order.price]){
@@ -143,7 +149,6 @@ export class OrderBook{
             }
             bidObj[order.price] += order.quantity;
         }
-
         for(let i = 0; i < this.asks.length ; i++){
             const order = this.asks[i];
             if(!askObj[order.price]){
@@ -151,12 +156,40 @@ export class OrderBook{
             }
             askObj[order.price] += order.quantity;
         }
+        
         for(const price in bidObj){
-            bids.push([price,bidObj[price].toString()]);
+            bids.push([price,bidObj[price].toString(),""]);
         }
         for(const price in askObj){
-            asks.push([price,askObj[price].toString()]);
+            asks.push([price,askObj[price].toString(),""]);
         }
+        bids.sort((a: any,b:any) =>{
+            if(Number(a[0]) <= Number(b[0])) return 1;
+            else return -1;
+        })
+        asks.sort((a: any,b:any) =>{
+            if(Number(a[0]) >= Number(b[0])) return 1;
+            else return -1;
+        })
+        console.log(bids)
+        let sum = 0;
+        for(let x of asks){
+            sum+= (Number(x[0])*Number(x[1]));
+            x[2] = sum.toFixed(3);
+        }
+        asks.sort((a: any,b:any) =>{
+            if(Number(a[0]) <= Number(b[0])) return 1;
+            else return -1;
+        })
+        sum = 0;
+        for(let x of bids){
+            sum+= (Number(x[0])*Number(x[1]));
+            x[2] = sum.toFixed(3);
+        }
+        bids.sort((a: any,b:any) =>{
+            if(Number(a[0]) <= Number(b[0])) return 1;
+            else return -1;
+        })
         return {bids,asks}
     }
 

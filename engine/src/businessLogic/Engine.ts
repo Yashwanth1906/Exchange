@@ -25,7 +25,8 @@ export class Engine{
         }
         if(snapshot){
             const sp = JSON.parse(snapshot.toString());
-            this.orderbooks = sp.orderbooks.map((o:any)=>new OrderBook(o.baseAsset,o.bids,o.asks,o.lastTradeId,o.currentPrice))
+            console.log(sp);
+            this.orderbooks = sp.orderbooks.map((o:any)=>new OrderBook("TATA",o.bids,o.asks,o.lastTradeId,o.currentPrice))
             this.balances = new Map(sp.balances);
         } else {
             this.orderbooks = [new OrderBook("TATA",[],[],0,0)];

@@ -13,6 +13,7 @@ orderRouter.post("/",async(req,res)=>{                      // creating an order
             market,price,quantity,side,userId
         }
     })
+    console.log("Result : ",result)
     res.json(result.payLoad);
 })
 

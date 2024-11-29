@@ -6,6 +6,8 @@ export class RedisManager{                         // This class creates two red
     private publisher: RedisClientType;            // Instance is the object of the RedisManager class itself which is used to pass the particular client's object.
     private static instance : RedisManager;
     private constructor(){
+        // this.client = createClient();
+        // try{
         this.client = createClient();
         this.client.connect();
         this.publisher = createClient();
@@ -18,7 +20,6 @@ export class RedisManager{                         // This class creates two red
         }
         return this.instance;
     }
-
     public sendAndAwait(message : any){                   // This sendAndAwait function is used to put the message frm a client in the queue and also connect to pub/sub to receive the msg from engine which 
         return new Promise((resolve)=>{                   // process the data and published the result in pub/sub which is then returned as promise in this function.
             const id = this.getRandomClientId();
@@ -26,6 +27,7 @@ export class RedisManager{                         // This class creates two red
                 this.client.unsubscribe(id);
                 resolve(JSON.parse(mess));
             });
+            console.log(message)
             this.publisher.lPush("messages",JSON.stringify({clientId:id,message}))
         })
     }

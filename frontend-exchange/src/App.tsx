@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TradingViewChart } from './components/TradingViewChart'
 
 function App() {
-
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <MarketHeader />

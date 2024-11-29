@@ -1,17 +1,17 @@
 import { Button } from "@/components/ui/button"
-import { Link } from "lucide-react"
+import { Link } from "react-router-dom"
 
 export function MarketHeader() {
   return (
     <header className="border-b">
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/" className="font-bold">Exchange</Link>
+          <Link to="/" className="font-bold">Exchange</Link>
           <nav className="flex items-center space-x-4">
-            <Link href="/markets" className="text-muted-foreground hover:text-foreground">
+            <Link to="/markets" className="text-muted-foreground hover:text-foreground">
               Markets
             </Link>
-            <Link href="/trade" className="text-muted-foreground hover:text-foreground">
+            <Link to="/trade" className="text-muted-foreground hover:text-foreground">
               Trade
             </Link>
           </nav>
