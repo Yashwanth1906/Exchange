@@ -4,9 +4,8 @@ import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { BACKEND_URL } from "@/constants/constants"
 import axios from "axios"
-import { stringify } from "querystring"
 import { useState } from "react"
-import { data } from "react-router-dom"
+
 
 interface TradeFormProps {
   type: "buy" | "sell"
@@ -19,8 +18,6 @@ export function TradeForm({ type }: TradeFormProps) {
   
   const handleClick = async() =>{
     console.log("clicked")
-    console.log(amount)
-    console.log(price)
     await axios.post(`${BACKEND_URL}/api/v1/order`,{
         market:"TATA_INR",
         price:price,
@@ -28,13 +25,10 @@ export function TradeForm({ type }: TradeFormProps) {
         side: type,
         userId: "1"
     }).then((res)=>{
-      console.log(res);
-      alert("Order placed successfully")
     }).catch((e)=>{
       console.log(e);
       alert(e);
     })
-    
   }
   return (
     <Card>

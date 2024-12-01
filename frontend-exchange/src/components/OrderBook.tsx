@@ -12,19 +12,38 @@ import { useEffect, useState } from "react"
     const [asks,setAsks] = useState([]);
     const [bids,setBids]  = useState([])
   
-    useEffect(() => {
-      const fetchOrderBook = async () => {
+    useEffect( ()=> {
+      const fetchTrades = async () => {
         try {
-          const res = await axios.get(`${BACKEND_URL}/api/v1/depth?symbol=TATA_INR`);
-          console.log(res.data)
+          const res = await axios.get("http://localhost:6969/api/v1/depth"); // Replace with your API endpoint
+          console.log(res);
           setAsks(res.data.asks);
           setBids(res.data.bids);
         } catch (error) {
-          console.error("Failed to fetch order book:", error);
+          console.error("Failed to fetch trades:", error);
         }
       };
-      fetchOrderBook();
-    }, []);
+      fetchTrades();
+      const ws = new WebSocket("ws://localhost:3001");
+      ws.onopen = () => {
+        const message = {
+          method: "SUBSCRIBE",
+          params: ["depth@TATA_INR"]
+        };
+        ws.send(JSON.stringify(message));
+      };
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.stream === "depth@TATA_INR" && data.data) {
+          const { a: newAsks, b: newBids } = data.data;
+          setAsks(newAsks);
+          setBids(newBids);
+        }
+      };
+      return () => {
+        ws.close();
+      };
+    }, []); 
     return (
       <div className="h-full rounded-lg border p-4">
         <div className="mb-4">

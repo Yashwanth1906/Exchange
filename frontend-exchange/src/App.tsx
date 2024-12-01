@@ -6,12 +6,15 @@ import { TradeForm } from './components/TradeForm'
 import { OrderBook } from './components/OrderBook'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TradingViewChart } from './components/TradingViewChart'
+import { TradesView } from './components/Trades'
+import { useState } from 'react'
 
 function App() {
+  const [activeTab, setActiveTab] = useState("orderBook"); // "orderBook" or "trades"
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <MarketHeader />
-      <MarketStats 
+      <MarketStats
         price={3597.36}
         change={5.44}
         high={3682.57}
@@ -36,7 +39,25 @@ function App() {
           </div>
         </div>
         <div className="col-span-1">
-          <OrderBook />
+          {/* <OrderBook />
+          <TradesView/> */}
+          <div className="flex border-b">
+            <button
+              className={`flex-1 py-2 text-center ${activeTab === "orderBook" ? "font-bold" : "text-gray-500"}`}
+              onClick={() => setActiveTab("orderBook")}
+            >
+              Order Book
+            </button>
+            <button
+              className={`flex-1 py-2 text-center ${activeTab === "trades" ? "font-bold" : "text-gray-500"}`}
+              onClick={() => setActiveTab("trades")}
+            >
+              Trades
+            </button>
+      </div>
+        <div className="flex-1 overflow-y-auto">
+          {activeTab === "orderBook" ? <OrderBook /> : <TradesView />}
+        </div>
         </div>
       </div>
     </div>

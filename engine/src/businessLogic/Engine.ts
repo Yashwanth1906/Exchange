@@ -229,6 +229,7 @@ export class Engine{
         if(!orderbook){
             throw new Error("No orderbook is found to create an order");
         }
+        console.log("DATA INCOMING: "+ price + " "+ quantity + " "+ side)
         this.checkAndLockFund(baseAsset,quoteAsset,side,userId,price,quantity);
         const order: Order = {
             price: Number(price),
@@ -248,6 +249,7 @@ export class Engine{
     }
     publishWsTrades(fills:Fill[],userId:string,market:string){
         fills.forEach(x =>{
+            console.log(x.otherUserId + " : " + userId)
             RedisManager.getInstance().publicMessage(`trade@${market}`,{
                 stream : `trade@${market}`,
                 data:{
@@ -290,25 +292,32 @@ export class Engine{
             throw new Error("No order book is found with that market stamp");
         }
         const depth = orderbook.getDepth();
+        console.log("Depth: "+depth.asks)
+        console.log("Bids : "+depth.bids)
+        console.log("++++++++++++++++++++++++++++++++++++++++++++++")
         if(side === "buy"){
             const updatedAsks = depth.asks.filter(x => fills.map(f => f.price).includes(x[0].toString()));
             const updateBids = depth.bids.find(x => x[0] === price);
+            console.log("Updated Asks: "+updatedAsks)
+            console.log("Updated Bids: "+updateBids)
             RedisManager.getInstance().publicMessage(`depth@${market}`,{
                 stream: `depth@${market}`,
                 data:{
-                    a: updatedAsks,
-                    b: updateBids ? [updateBids] : [],
+                    a: depth.asks,
+                    b: depth.bids,
                     e: "depth"
                 }
             })
         } else {
             const updatedBids = depth.bids.filter(x => fills.map(f => f.price).includes(x[0].toString()));
             const updatedAsks = depth.asks.find(x => x[0] === price);
+            console.log("Updated Asks: "+updatedAsks)
+            console.log("Updated Bids: "+updatedBids)
             RedisManager.getInstance().publicMessage(`depth@${market}`,{
                 stream: `depth@${market}`,
                 data:{
-                    a: updatedAsks ? [updatedAsks] : [],
-                    b: updatedBids,
+                    a: depth.asks,
+                    b: depth.bids,
                     e: "depth"
                 }
             })
