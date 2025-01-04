@@ -14,7 +14,6 @@ export class User{
     public emit(message: string){
         this.ws.send(JSON.stringify(message));
     }
-
     private addEventListeners(){
         console.log("AddevenListener")
         this.ws.on("message",(x : string) =>{

@@ -1,4 +1,3 @@
-import { BACKEND_URL } from "@/constants/constants"
 import axios from "axios"
 import { useEffect, useState } from "react"
 

@@ -24,7 +24,7 @@ export function TradeForm({ type }: TradeFormProps) {
         quantity: amount,
         side: type,
         userId: "1"
-    }).then((res)=>{
+    }).then(()=>{
     }).catch((e)=>{
       console.log(e);
       alert(e);

@@ -20,7 +20,7 @@ export class SubscriptionManager{
         return this.instance;
     }
     public subscribe(id: string, subscription: string){
-        console.log(subscription)
+        console.log(subscription);
         if(this.subscriptions.get(id)?.includes(subscription)) return;
         this.subscriptions.set(id,(this.subscriptions.get(id) || []).concat(subscription));
         this.reverseSubscriptions.set(subscription,(this.reverseSubscriptions.get(subscription) || []).concat(id));
